@@ -266,8 +266,11 @@ int rbtree_erase(rbtree *t, node_t *p)
     {
       x->parent = y;
     }
+    //여러개 있을 때
     else
     {
+      // 한마디로 p없앤 자리에 y, y없앤 자리에 y->right 넣어버리기
+      //rbtree y minimum 그 자리에다가 y right를 넣어버리고
       rbtree_transplant(t,y,y->right);
       y->right = p->right;
       y->right->parent = y;
