@@ -15,11 +15,6 @@ rbtree *new_rbtree(void) {
   return p;
 }
 
-void delete_rbtree(rbtree *t) {
-  // TODO: reclaim the tree nodes's memory
-  free(t);
-}
-
 void left_rotate(rbtree *t, node_t *x)
 {
   // x->right가 nil이 아니라는 가정 하에 함수 진행
@@ -162,27 +157,136 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
   rbtree_insert_fixup(t, z);
   return t->root;
 }
-
+//남음
 node_t *rbtree_find(const rbtree *t, const key_t key) {
   // TODO: implement find
+  
   return t->root;
+}
+
+void rbtree_transplant(rbtree *t, node_t *u, node_t *v)
+{
+  if (u->parent == t->nil)
+  {
+    t->root = v;
+  }
+  else if (u == u->parent->left)
+  {
+    u->parent->left = v;
+  }
+  else
+  {
+    u->parent->right = v;
+  }
+  v->parent = u->parent;
+}
+
+//남음
+void delete_rbtree(rbtree *t) {
+  // TODO: reclaim the tree nodes's memory
+  free(t);
 }
 
 node_t *rbtree_min(const rbtree *t) {
   // TODO: implement find
-  return t->root;
+  node_t *current = t->root;
+  if (t->nil == t->root)
+  {
+    return NULL;
+  }
+  while(current->left != t->nil)
+  {
+    current = current->left;
+  }
+  return current;
 }
 
 node_t *rbtree_max(const rbtree *t) {
   // TODO: implement find
-  return t->root;
+  node_t *current = t->root;
+  if (t->nil == t->root)
+  {
+    return NULL;
+  }
+  while(current->right != t->nil)
+  {
+    current = current->right;
+  }
+  return current;
 }
 
-int rbtree_erase(rbtree *t, node_t *p) {
+node_t *subtree_min(rbtree *t, node_t* z)
+{
+  node_t* current = z;
+  if (z == t->nil)
+  {
+    return NULL;
+  }
+  while(current->left != t->nil)
+  {
+    current = current->left;
+  }
+  return current;
+}
+
+void rbtree_erase_fixup(rbtree *t, node_t *x)
+{
+
+}
+
+//남음
+int rbtree_erase(rbtree *t, node_t *p) 
+{
   // TODO: implement erase
+  node_t* y = p;
+  color_t y_orig_color = y->color;
+  //1. left 밖에 없으니까 오른쪽의 것을 심음
+  if (p->left == t->nil)
+  {
+    node_t *x = p->right;
+    //nil이니까 그것에 다가 넣는다 어차피 오른 쪽은 무엇이 있든간에
+    //어쨋든 넣는 것! 
+    rbtree_transplant(t, p, p->right);
+  }
+  
+  //2. right 밖에 없으니까 왼쪽의 것을 심음
+  else if (p->right == t->nil)
+  {
+    node_t *x = p->left;
+    rbtree_transplant(t, p, p->left);
+  }
+  else
+  {
+    // 서브트리를 만들어서 그것의 최하를 구해주자!
+    y = subtree_min(t, p->right);
+    y_orig_color = y->color;
+    node_t *x = y->right;
+    //한개만 있을 떄
+    if (y->parent == p)
+    {
+      x->parent = y;
+    }
+    else
+    {
+      rbtree_transplant(t,y,y->right);
+      y->right = p->right;
+      y->right->parent = y;
+    }
+      // p룰 없앤 자리에 y심기
+      rbtree_transplant(t,p,y);
+      y->left = p->left;
+      y->left->parent = y;
+      //색도 동일하게 바꿔주기
+      y->color = p->color;
+  if(y_orig_color == RBTREE_BLACK)
+  {
+    rbtree_delete_fixup(t, x);
+  }
+  } 
   return 0;
 }
 
+//남음
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
   // TODO: implement to_array
   return 0;
