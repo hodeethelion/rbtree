@@ -280,7 +280,7 @@ int rbtree_erase(rbtree *t, node_t *p)
       y->color = p->color;
   if(y_orig_color == RBTREE_BLACK)
   {
-    rbtree_delete_fixup(t, x);
+    rbtree_erase_fixup(t, x);
   }
   } 
   return 0;
