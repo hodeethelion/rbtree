@@ -1,5 +1,5 @@
 #include "rbtree.h"
-
+#include <stdio.h>
 #include <stdlib.h>
 
 rbtree *new_rbtree(void) {
@@ -255,7 +255,7 @@ void rbtree_erase_fixup(rbtree *t, node_t *x)
   // 왜 빨간색은? ... 
 while(x!= t->root && x->color == RBTREE_BLACK)
 {
-  if (x==x->parent->left)
+  if (x == x->parent->left)
   // sibling 찾기
   {
     node_t* w = x->parent->right;
@@ -321,8 +321,10 @@ while(x!= t->root && x->color == RBTREE_BLACK)
     x = t->root;
     }
   }
-  x->color = RBTREE_BLACK;
+//  x->color = RBTREE_BLACK;
 }
+  x->color = RBTREE_BLACK;
+
 }
 
 int rbtree_erase(rbtree *t, node_t *p) 
@@ -352,7 +354,7 @@ int rbtree_erase(rbtree *t, node_t *p)
     y = subtree_min(t, p->right);
     y_orig_color = y->color;
     // 여기서 x는 subtree minimum의 오른쪽
-    node_t *x = y->right;
+    x = y->right;
     //한개만 있을 떄 즉 p에서 바로 내려갔는데 그게 y야
     if (y->parent == p)
     {
@@ -382,14 +384,24 @@ int rbtree_erase(rbtree *t, node_t *p)
   return 0;
 }
 
-int insert_node_array(const rbtree* t, node_t *cur, key_t *arr, int i, const size_t n)
+void insert_node_array(const rbtree* t, node_t *cur, key_t *arr, int *index, const size_t n)
 {
+  if ((*index)< n && cur != t->nil)
+  {
+    insert_node_array(t, cur->left, arr, index, n);
+    if ((*index)<n)
+    {
+    arr[(*index)++] = cur->key;
+    }
+    insert_node_array(t, cur->right, arr, index, n);   
 
+  }
 }
-
 
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) 
 {
-  // TODO: implement to_array
+  int index = 0;
+  insert_node_array(t, t->root, arr, &index, n);
+
   return 0;
 }
