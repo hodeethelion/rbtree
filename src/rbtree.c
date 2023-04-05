@@ -157,11 +157,20 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
   rbtree_insert_fixup(t, z);
   return t->root;
 }
-//남음
+
 node_t *rbtree_find(const rbtree *t, const key_t key) {
   // TODO: implement find
-  
-  return t->root;
+  node_t* temp = t->root;
+  while(temp != t->nil)
+  {
+    if(temp->key > key)
+      temp = temp->left;
+    else if(temp->key < key)
+      temp = temp->right;
+    else
+      return temp;
+  }
+  return NULL;
 }
 
 void rbtree_transplant(rbtree *t, node_t *u, node_t *v)
@@ -181,9 +190,20 @@ void rbtree_transplant(rbtree *t, node_t *u, node_t *v)
   v->parent = u->parent;
 }
 
-//남음
+void delete_node(rbtree *t, node_t* n)
+{
+  if (n== t->nil){
+    return;
+  }
+  delete_node(t, n->left);
+  delete_node(t, n->right);
+  free(n);
+}
+
 void delete_rbtree(rbtree *t) {
   // TODO: reclaim the tree nodes's memory
+  delete_node(t, t->root);
+  free(t->nil);
   free(t);
 }
 
@@ -231,37 +251,109 @@ node_t *subtree_min(rbtree *t, node_t* z)
 
 void rbtree_erase_fixup(rbtree *t, node_t *x)
 {
-
+  // 루트까지 가지 않고 색이 검은색일때까지?
+  // 왜 빨간색은? ... 
+while(x!= t->root && x->color == RBTREE_BLACK)
+{
+  if (x==x->parent->left)
+  // sibling 찾기
+  {
+    node_t* w = x->parent->right;
+    if (w->color == RBTREE_RED)
+    {
+      //case1: 
+      w->color = RBTREE_BLACK; 
+      x->parent->color = RBTREE_RED;
+      left_rotate(t, x->parent);
+      w = x->parent->right;
+    }
+    //case2 
+    if (w->left->color == RBTREE_BLACK && w->right->color == RBTREE_BLACK)
+    {
+      w->color = RBTREE_RED;
+      x = x->parent;
+    }
+    //case3
+    else 
+    {
+      if (w->right->color == RBTREE_BLACK)
+      {
+        w->left->color = RBTREE_BLACK;
+        w->color = RBTREE_RED;
+        right_rotate(t, w);
+        w = x->parent->right;
+      }
+      w->color = x->parent->color;
+      x->parent->color = RBTREE_BLACK;
+      w->right->color = RBTREE_BLACK;
+      left_rotate(t, x->parent);
+      x = t->root;
+    }
+  }
+  else // other direction
+  {
+    node_t* w = x->parent->left;
+    if (w->color == RBTREE_RED)
+    {
+      w->color = RBTREE_BLACK;
+      x->parent->color = RBTREE_RED;
+      right_rotate(t, x->parent);
+      w = x->parent->left;
+    }
+    if (w->right->color == RBTREE_BLACK && w->left->color == RBTREE_BLACK)
+    {
+      w->color = RBTREE_RED;
+      x = x->parent;
+    }
+    else 
+    {
+      if (w->left->color == RBTREE_BLACK)
+    {
+      w->right->color = RBTREE_BLACK;
+      w->color = RBTREE_RED;
+      left_rotate(t, w);
+      w= x->parent->left;
+    }
+    w->color = x->parent->color;
+    x->parent->color = RBTREE_BLACK;
+    w->left->color = RBTREE_BLACK;
+    right_rotate(t, x->parent);
+    x = t->root;
+    }
+  }
+  x->color = RBTREE_BLACK;
+}
 }
 
-//남음
 int rbtree_erase(rbtree *t, node_t *p) 
 {
   // TODO: implement erase
   node_t* y = p;
+  node_t* x;
   color_t y_orig_color = y->color;
-  //1. left 밖에 없으니까 오른쪽의 것을 심음
+  //1. right 밖에 없으니까 오른쪽의 것을 심음
   if (p->left == t->nil)
   {
-    node_t *x = p->right;
+    x = p->right;
     //nil이니까 그것에 다가 넣는다 어차피 오른 쪽은 무엇이 있든간에
     //어쨋든 넣는 것! 
     rbtree_transplant(t, p, p->right);
   }
   
-  //2. right 밖에 없으니까 왼쪽의 것을 심음
+  //2. left 밖에 없으니까 왼쪽의 것을 심음
   else if (p->right == t->nil)
   {
-    node_t *x = p->left;
+    x = p->left;
     rbtree_transplant(t, p, p->left);
   }
   else
   {
-    // 서브트리를 만들어서 그것의 최하를 구해주자!
+    // 서브트리를 만들어서 그것의 최하를 구해주자! --> 이뜻은 지울것보다 큰 것의 가장 가까운것 
     y = subtree_min(t, p->right);
     y_orig_color = y->color;
+    // 여기서 x는 subtree minimum의 오른쪽
     node_t *x = y->right;
-    //한개만 있을 떄
+    //한개만 있을 떄 즉 p에서 바로 내려갔는데 그게 y야
     if (y->parent == p)
     {
       x->parent = y;
@@ -286,14 +378,18 @@ int rbtree_erase(rbtree *t, node_t *p)
     rbtree_erase_fixup(t, x);
   }
   } 
+  free(p);
   return 0;
 }
 
-//남음
-int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
+int insert_node_array(const rbtree* t, node_t *cur, key_t *arr, int i, const size_t n)
+{
+
+}
+
+
+int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) 
+{
   // TODO: implement to_array
   return 0;
 }
-
-
-/**my functions*/
